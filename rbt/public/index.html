@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Bridge - Persistent Layout</title>
+    <style>
+        body {
+            margin: 0;
+            background: #f4f7fb;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        /* The wrapper we will make fullscreen */
+        #appContainer {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #f4f7fb;
+        }
+
+        header {
+            height: 60px;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #38bdf8;
+            justify-content: space-between;
+            border-bottom: 2px solid #38bdf8;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 60px);
+        }
+
+        /* LEFT SIDE: Video */
+        .video-section {
+            flex: 3;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        video {
+            width: 100%;
+            max-height: 75vh;
+            border-radius: 12px;
+            background: #000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* Subtitle Overlay on Video */
+        #subtitleOverlay {
+            position: absolute;
+            bottom: 10%;
+            width: 80%;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .subtitle-text {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 4px;
+            font-size: 1.4rem;
+            text-shadow: 2px 2px 2px rgba(0,0,0,0.8);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        /* RIGHT SIDE: Subtitle Feed */
+        .chat-section {
+            flex: 1;
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feed-header {
+            padding: 15px;
+            font-weight: bold;
+            color: #1e293b;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .subtitle-history {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .history-item {
+            padding: 10px;
+            background: #f1f5f9;
+            border-left: 4px solid #38bdf8;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .exit-btn {
+            background: #ef4444;
+            color: white;
+            display: none; /* Only show in fullscreen */
+        }
+
+        input[type="file"] { display: none; }
+
+        /* Fullscreen-specific Adjustments */
+        #appContainer:fullscreen .exit-btn { display: inline-block; }
+        #appContainer:fullscreen #goFsBtn { display: none; }
+        #appContainer:fullscreen { background: #0f172a; }
+        #appContainer:fullscreen .chat-section { background: #fdfdfd; }
+    </style>
+</head>
+<body>
+
+<div id="appContainer">
+    <header>
+        <span>Sign Bridge</span>
+        <div>
+            <button class="btn exit-btn" onclick="toggleFullscreen()">Exit Fullscreen</button>
+            <span id="status" style="font-size: 14px; margin-left: 10px;">READY</span>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="video-section">
+            <div id="normalControls" style="margin-bottom: 15px; display: flex; gap: 10px; width: 100%;">
+                <label class="btn">Select Video <input type="file" id="videoInput" accept="video/*"></label>
+                <button class="btn" id="goFsBtn" onclick="toggleFullscreen()">Go Fullscreen</button>
+            </div>
+
+            <div class="video-wrapper">
+                <video id="videoPlayer" controls></video>
+                <div id="subtitleOverlay">
+                    <div class="subtitle-text" id="activeSubtitle"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-section">
+            <div class="feed-header">Subtitle Feed</div>
+            <div id="chatBox" class="subtitle-history"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const input = document.getElementById("videoInput");
+    const video = document.getElementById("videoPlayer");
+    const appContainer = document.getElementById("appContainer");
+    const chatBox = document.getElementById("chatBox");
+    const activeSubtitle = document.getElementById("activeSubtitle");
+    const statusText = document.getElementById("status");
+
+    let timeline = [];
+
+    // Receive data from server
+    input.addEventListener("change", async () => {
+        const file = input.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("video", file);
+        statusText.textContent = "UPLOADING...";
+
+        try {
+            const response = await fetch("/upload", { method: "POST", body: formData });
+            const data = await response.json();
+            
+            timeline = data.timeline;
+            video.src = `/videos/${data.filename}`;
+            statusText.textContent = "CONNECTED";
+            video.play();
+        } catch (err) {
+            statusText.textContent = "ERROR";
+        }
+    });
+
+    // Fullscreen Toggle (Targeting the whole app container)
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            appContainer.requestFullscreen().catch(err => {
+                console.error(`Error: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    // Sync Logic
+    video.addEventListener("timeupdate", () => {
+        const current = video.currentTime;
+        
+        // 1. Update Feed List
+        const visibleMessages = timeline.filter(m => m.time <= current);
+        if (chatBox.children.length !== visibleMessages.length) {
+            chatBox.innerHTML = visibleMessages.map(m => `<div class="history-item">${m.text}</div>`).join('');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // 2. Update Overlay Subtitle
+        const currentMsg = timeline.findLast(m => current >= m.time && current < m.time + 3);
+        if (currentMsg) {
+            activeSubtitle.textContent = currentMsg.text;
+            activeSubtitle.style.opacity = "1";
+        } else {
+            activeSubtitle.style.opacity = "0";
+        }
+    });
+</script>
+
+</body>
+</html>
