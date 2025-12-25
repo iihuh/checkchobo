@@ -1,0 +1,153 @@
+body {
+    margin: 0;
+    background: #f4f7fb;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+}
+
+#appContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #f4f7fb;
+}
+
+header {
+    height: 60px;
+    background: #1e293b;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-weight: bold;
+    justify-content: space-between;
+    border-bottom: 2px solid #38bdf8;
+}
+
+.logo {
+    font-size: 22px;
+    color: #38bdf8;
+}
+
+#status {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-left: 15px;
+    font-weight: normal;
+}
+
+.main-content {
+    display: flex;
+    flex: 1;
+    height: calc(100vh - 60px);
+}
+
+/* Video Side */
+.video-section {
+    flex: 3;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.controls-bar {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.video-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+video {
+    width: 100%;
+    max-height: 75vh;
+}
+
+/* Subtitle Styling */
+#subtitleOverlay {
+    position: absolute;
+    bottom: 10%;
+    width: 85%;
+    text-align: center;
+    pointer-events: none;
+}
+
+.subtitle-text {
+    display: inline-block;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 1.5rem;
+    text-shadow: 2px 2px 2px rgba(0,0,0,0.8);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* Feed Side */
+.chat-section {
+    flex: 1;
+    background: white;
+    border-left: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+}
+
+.feed-header {
+    padding: 15px;
+    font-weight: bold;
+    color: #1e293b;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.subtitle-history {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.history-item {
+    padding: 12px;
+    background: #f1f5f9;
+    border-left: 4px solid #38bdf8;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #334155;
+}
+
+/* Buttons */
+.btn {
+    background: #38bdf8;
+    color: #0f172a;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.exit-btn {
+    background: #ef4444;
+    color: white;
+    display: none;
+}
+
+input[type="file"] { display: none; }
+
+/* Fullscreen States */
+#appContainer:fullscreen { background: #0f172a; }
+#appContainer:fullscreen .exit-btn { display: inline-block; }
+#appContainer:fullscreen #goFsBtn { display: none; }
